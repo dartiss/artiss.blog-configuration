@@ -8,6 +8,10 @@ The issues log is here for any issues on my site, not just with this configurati
 
 ## Changelog
 
+**Version 4.7**
+* Removed translation code
+* Added a full header, inc. GPL details
+
 **Version 4.6**
 
 * Further code quality improvements

@@ -1,13 +1,28 @@
 <?php
 /**
-Plugin Name: Artiss.blog Configuration
-Plugin URI: https://artiss.blog
-Description: Configuration Settings for Artiss.blog
-Version: 4.6
-Author: David Artiss
-Author URI: https://artiss.blog
-
-@package  artiss-blog-configuration
+ * Artiss.blog Configuration
+ *
+ * @package           artiss-blog-configuration
+ * @author            David Artiss
+ * @license           GPL-2.0-or-later
+ *
+ * Plugin Name:       Artiss.blog Configuration
+ * Plugin URI:        https://github.com/dartiss/artiss.blog-configuration
+ * Description:       Configuration Settings for Artiss.blog.
+ * Version:           4.8
+ * Requires at least: 4.6
+ * Requires PHP:      8.2
+ * Author:            David Artiss
+ * Author URI:        https://artiss.blog
+ * License:           GPL v2 or later
+ * License URI:       http://www.gnu.org/licenses/gpl-2.0.txt
+ *
+ * This program is free software; you can redistribute it and/or modify it under the terms of the GNU
+ * General Public License version 2, as published by the Free Software Foundation. You may NOT assume
+ * that you can use any other version of the GPL.
+ *
+ * This program is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without
+ * even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
  */
 
 /**
@@ -78,17 +93,12 @@ function wikilinker_shortcode( $paras = '', $content = '' ) {
 
 	// Extract the shortcode parameters.
 
-	extract(
-		shortcode_atts(
-			array(
-				'alt'    => '',
-				'rel'    => '',
-				'lang'   => 'en',
-				'target' => '',
-			),
-			$paras
-		)
-	);
+	if ( isset( $paras['alt'] ) ) {
+		$alt = $paras['alt'];
+	}
+	if ( isset( $paras['target'] ) ) {
+		$target = $paras['target'];
+	}
 
 	// If an alternative link is specified use that rather than the linked text.
 
@@ -104,18 +114,15 @@ function wikilinker_shortcode( $paras = '', $content = '' ) {
 
 	// Build the title plus any additional, optional parameters.
 
-	$title  = sprintf( __( '%s on Wikipedia', 'wikilinker' ), $content );
+	$title  = sprintf( '%s on Wikipedia', $content );
 	$extras = '';
-	if ( '' !== $rel ) {
-		$extras .= ' rel="' . $rel . '"';
-	}
 	if ( '' !== $target ) {
 		$extras .= ' target="' . $target . '"';
 	}
 
 	// Generate the HTML code.
 
-	$output = '<a href="https://' . $lang . '.wikipedia.org/wiki/' . $lookup . '" title="' . $title . '"' . $extras . '>' . $content . '</a>';
+	$output = '<a href="https://en.wikipedia.org/wiki/' . $lookup . '" title="' . $title . '"' . $extras . '>' . $content . '</a>';
 	return $output;
 }
 
@@ -185,3 +192,25 @@ function add_theme_colour() {
 	<?php
 }
 add_action( 'wp_head', 'add_theme_colour' );
+
+remove_filter( 'authenticate', 'wp_authenticate_email_password', 20 );
+
+/**
+ * Disable logging in via email
+ *
+ * Check for and serve an appropriate response to users attempting to sign in with email.
+ *
+ * @param  string $user     If the user is authenticated.
+ * @param  string $username Username or email address.
+ * @return string           Authentication details
+ */
+function artiss_blog_disable_email_login( $user, $username ) {
+
+	if ( ! empty( $username ) && filter_var( $username, FILTER_VALIDATE_EMAIL ) ) {
+		return new WP_Error( 'email_login_disabled', 'Logging in with email is disabled.' );
+	}
+
+	return $user;
+}
+
+add_filter( 'authenticate', 'artiss_blog_disable_email_login', 20, 3 );
