@@ -6,7 +6,13 @@ It's all GPL so feel free to borrow, fork, etc, any component of it. Don't expec
 
 ## Changelog
 
+**Version 4.8**
+
+* Made sure all functions have a `artiss_blog` prefix
+* Added placeholders code which I had in a seperate plugin
+
 **Version 4.7**
+
 * Removed translation code
 * Added a full header, inc. GPL details
 

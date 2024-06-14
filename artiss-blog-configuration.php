@@ -37,14 +37,14 @@ add_filter( 'the_content_rss', 'do_shortcode' );
  * @param    array $avatar_defaults  Default avatars.
  * @return   array                   New array.
  */
-function artiss_new_gravatar( $avatar_defaults ) {
+function artiss_blog_new_gravatar( $avatar_defaults ) {
 
 	$new_avatar                     = content_url() . '/uploads/2016/04/Default-Avatar.png';
 	$avatar_defaults[ $new_avatar ] = 'No Avatar';
 	return $avatar_defaults;
 }
 
-add_filter( 'avatar_defaults', 'artiss_new_gravatar' );
+add_filter( 'avatar_defaults', 'artiss_blog_new_gravatar' );
 
 /**
  * Add disclosure messages.
@@ -52,7 +52,7 @@ add_filter( 'avatar_defaults', 'artiss_new_gravatar' );
  * @param    string $content  Post/page content.
  * @return   string           Updated content.
  */
-function artiss_add_disclosure( $content ) {
+function artiss_blog_add_disclosure( $content ) {
 
 	global $post;
 
@@ -80,7 +80,7 @@ function artiss_add_disclosure( $content ) {
 	return $content;
 }
 
-add_filter( 'the_content', 'artiss_add_disclosure' );
+add_filter( 'the_content', 'artiss_blog_add_disclosure' );
 
 /**
  * Shortcode for linking to Wikipedia
@@ -89,7 +89,7 @@ add_filter( 'the_content', 'artiss_add_disclosure' );
  * @param    string $content  Any content between shortcodes.
  * @return   array            Output.
  */
-function wikilinker_shortcode( $paras = '', $content = '' ) {
+function artiss_blog_wikilinker_shortcode( $paras = '', $content = '' ) {
 
 	// Extract the shortcode parameters.
 
@@ -126,7 +126,7 @@ function wikilinker_shortcode( $paras = '', $content = '' ) {
 	return $output;
 }
 
-add_shortcode( 'wikilink', 'wikilinker_shortcode' );
+add_shortcode( 'wikilink', 'artiss_blog_wikilinker_shortcode' );
 
 /**
  * Add new headers
@@ -134,7 +134,7 @@ add_shortcode( 'wikilink', 'wikilinker_shortcode' );
  * @param    array $headers      Existing headers.
  * @return   array               Updated headers.
  */
-function adb_add_headers( $headers ) {
+function artiss_blog_add_headers( $headers ) {
 
 	$headers['Permissions-Policy'] = 'interest-cohort=()';   // Disable Floc.
 	$headers['Host-Header']        = 'Pressable';            // Add a host header.
@@ -142,15 +142,15 @@ function adb_add_headers( $headers ) {
 	return $headers;
 }
 
-add_filter( 'wp_headers', 'adb_add_headers' );
+add_filter( 'wp_headers', 'artiss_blog_add_headers' );
 
 /**
  * Add a menu for the block editor
  */
-function add_menus() {
+function artiss_blog_add_menus() {
 
 	if ( class_exists( 'Jetpack' ) ) {
-		add_action( 'jetpack_admin_menu', 'add_jetpack_menu' );
+		add_action( 'jetpack_admin_menu', 'artiss_blogadd_jetpack_menu' );
 	}
 
 	add_menu_page(
@@ -164,12 +164,12 @@ function add_menus() {
 	);
 }
 
-add_action( 'admin_menu', 'add_menus', 5 );
+add_action( 'admin_menu', 'artiss_blog_add_menus', 5 );
 
 /**
  * Add a sub-menu to Jetpack for the modules
  */
-function add_jetpack_menu() {
+function artiss_blog_add_jetpack_menu() {
 
 	add_submenu_page(
 		'jetpack',
@@ -184,14 +184,14 @@ function add_jetpack_menu() {
 /**
  * Add support for a theme colour
  */
-function add_theme_colour() {
+function artiss_blog_add_theme_colour() {
 	?>
 	<meta name="theme-color" content="#BE702B" media="(prefers-color-scheme: light)">
 	<meta name="theme-color" content="#265BA6" media="(prefers-color-scheme: dark)">
 	<link rel="me" href="https://mastodon.social/@dartiss">
 	<?php
 }
-add_action( 'wp_head', 'add_theme_colour' );
+add_action( 'wp_head', 'artiss_blog_add_theme_colour' );
 
 remove_filter( 'authenticate', 'wp_authenticate_email_password', 20 );
 
@@ -214,3 +214,29 @@ function artiss_blog_disable_email_login( $user, $username ) {
 }
 
 add_filter( 'authenticate', 'artiss_blog_disable_email_login', 20, 3 );
+
+/**
+ * Process placeholders for post content
+ *
+ * Called with post content for placeholder actions to take place
+ *
+ * @param    string $content   Content being passed in for replacement to be made.
+ * @return   string            Content after replacements have been made.
+ */
+function artiss_blog_placeholders_content( $content ) {
+
+	global $post;
+
+	if ( false !== strpos( $content, '{{' ) ) {
+
+		$content  = str_ireplace( '{{PHP}}', phpversion(), $content );
+		$content  = str_ireplace( '{{WordPress}}', get_bloginfo( 'version' ), $content );
+		$content  = str_ireplace( '{{posts}}', number_format( wp_count_posts()->publish ), $content );
+		$my_theme = wp_get_theme();
+		$content  = str_ireplace( '{{theme}}', $my_theme->get( 'Name' ), $content );
+	}
+
+	return $content;
+}
+
+add_filter( 'the_content', 'artiss_blog_placeholders_content' );
