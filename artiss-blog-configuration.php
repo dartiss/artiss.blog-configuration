@@ -9,7 +9,7 @@
  * Plugin Name:       Artiss.blog Configuration
  * Plugin URI:        https://github.com/dartiss/artiss.blog-configuration
  * Description:       Configuration Settings for Artiss.blog.
- * Version:           4.8
+ * Version:           4.7
  * Requires at least: 4.6
  * Requires PHP:      8.2
  * Author:            David Artiss
