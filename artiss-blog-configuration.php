@@ -9,7 +9,7 @@
  * Plugin Name:       Artiss.blog Configuration
  * Plugin URI:        https://github.com/dartiss/artiss.blog-configuration
  * Description:       Configuration Settings for Artiss.blog.
- * Version:           4.8
+ * Version:           4.8.5
  * Requires at least: 4.6
  * Requires PHP:      8.2
  * Author:            David Artiss
@@ -56,9 +56,26 @@ function artiss_blog_add_disclosure( $content ) {
 
 	global $post;
 
-	if ( is_single() ) {
+	// Process placeholders for post content.
 
-		// Add a disclosure for gifted items.
+	if ( false !== strpos( $content, '{{' ) ) {
+
+		$content  = str_ireplace( '{{PHP}}', phpversion(), $content );
+		$content  = str_ireplace( '{{WordPress}}', get_bloginfo( 'version' ), $content );
+		$content  = str_ireplace( '{{posts}}', number_format( wp_count_posts()->publish ), $content );
+		$my_theme = wp_get_theme();
+		$content  = str_ireplace( '{{theme}}', $my_theme->get( 'Name' ), $content );
+	}
+
+	// Add an edit button to the bottom of the post.
+
+	if ( is_singular() && current_user_can( 'edit_posts' ) ) {
+		$content .= '<p><a href="' . get_edit_post_link() . '">Edit</a></p>';
+	}
+
+	// Add a disclosure for gifted items.
+
+	if ( is_single() ) {
 
 		$custom_field = get_post_meta( $post->ID, 'disclosure', false );
 		if ( isset( $custom_field[0] ) ) {
@@ -73,7 +90,7 @@ function artiss_blog_add_disclosure( $content ) {
 		// Add an automatic disclosure for Amazon links.
 
 		if ( false !== strpos( $content, 'https://amzn.to/' ) || ( false !== strpos( $content, 'https://www.amazon.co.uk/' ) && false !== strpos( $content, '&tag=' ) ) ) {
-			$content .= '<p class="has-luminous-vivid-amber-background-color has-background">ℹ️ <strong>As an Amazon Associate, links on this post may mean that I may from qualifying purchases that you make.</strong></p>';
+			$content .= '<p class="has-luminous-vivid-amber-background-color has-background">ℹ️ <strong>As an Amazon Associate, links on this post may mean that I may make money from qualifying purchases that you make.</strong></p>';
 		}
 	}
 
@@ -129,37 +146,37 @@ function artiss_blog_wikilinker_shortcode( $paras = '', $content = '' ) {
 add_shortcode( 'wikilink', 'artiss_blog_wikilinker_shortcode' );
 
 /**
- * Add new headers
+ * Shortcode for LinkedIn embeds
  *
- * @param    array $headers      Existing headers.
- * @return   array               Updated headers.
+ * @param    array  $paras    Shortcode paramaters.
+ * @param    string $content  Any content between shortcodes.
+ * @return   array            Output.
  */
-function artiss_blog_add_headers( $headers ) {
+function artiss_blog_linkedin_shortcode( $paras = '', $content = '' ) {
 
-	$headers['Permissions-Policy'] = 'interest-cohort=()';   // Disable Floc.
-	$headers['Host-Header']        = 'Pressable';            // Add a host header.
+	// Generate the HTML code.
 
-	return $headers;
+	return '<div class="wp-block-embed__wrapper"><span class="embed-linkedin" style="text-align:center; display: block;"><iframe src="https://www.linkedin.com/embed/feed/update/urn:li:share:' . $content . '" height="795" width="504" frameborder="0" allowfullscreen="" title="Embedded post"></iframe></span></div>';
 }
 
-add_filter( 'wp_headers', 'artiss_blog_add_headers' );
+add_shortcode( 'linkedin', 'artiss_blog_linkedin_shortcode' );
 
 /**
- * Add a menu for the block editor
+ * Add a menu for the block patterns
  */
 function artiss_blog_add_menus() {
 
 	if ( class_exists( 'Jetpack' ) ) {
-		add_action( 'jetpack_admin_menu', 'artiss_blogadd_jetpack_menu' );
+		add_action( 'jetpack_admin_menu', 'artiss_blog_add_jetpack_menu' );
 	}
 
 	add_menu_page(
-		'Reusable Blocks',
-		'Reusable Blocks',
+		'Patterns',
+		'Patterns',
 		'manage_options',
 		'edit.php?post_type=wp_block',
 		'',
-		'dashicons-editor-table',
+		'dashicons-layout',
 		22
 	);
 }
@@ -186,7 +203,7 @@ function artiss_blog_add_jetpack_menu() {
  */
 function artiss_blog_add_theme_colour() {
 	?>
-	<meta name="theme-color" content="#BE702B" media="(prefers-color-scheme: light)">
+	<meta name="theme-color" content="#265BA6" media="(prefers-color-scheme: light)">
 	<meta name="theme-color" content="#265BA6" media="(prefers-color-scheme: dark)">
 	<link rel="me" href="https://mastodon.social/@dartiss">
 	<?php
@@ -214,29 +231,3 @@ function artiss_blog_disable_email_login( $user, $username ) {
 }
 
 add_filter( 'authenticate', 'artiss_blog_disable_email_login', 20, 3 );
-
-/**
- * Process placeholders for post content
- *
- * Called with post content for placeholder actions to take place
- *
- * @param    string $content   Content being passed in for replacement to be made.
- * @return   string            Content after replacements have been made.
- */
-function artiss_blog_placeholders_content( $content ) {
-
-	global $post;
-
-	if ( false !== strpos( $content, '{{' ) ) {
-
-		$content  = str_ireplace( '{{PHP}}', phpversion(), $content );
-		$content  = str_ireplace( '{{WordPress}}', get_bloginfo( 'version' ), $content );
-		$content  = str_ireplace( '{{posts}}', number_format( wp_count_posts()->publish ), $content );
-		$my_theme = wp_get_theme();
-		$content  = str_ireplace( '{{theme}}', $my_theme->get( 'Name' ), $content );
-	}
-
-	return $content;
-}
-
-add_filter( 'the_content', 'artiss_blog_placeholders_content' );
